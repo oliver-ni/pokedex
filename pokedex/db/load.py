@@ -288,6 +288,7 @@ def load(session, tables=[], directory=None, drop_tables=False, verbose=False, s
             if any(x.references(table_obj) for x in column.foreign_keys):
                 self_ref_columns.append(column)
 
+        all_rows_tt = []
         new_rows = []
         def insert_and_commit():
             if not new_rows:
@@ -344,8 +345,18 @@ def load(session, tables=[], directory=None, drop_tables=False, verbose=False, s
                     deferred_rows.append((row_data, foreign_ids))
                     continue
 
+            if table_name == "pokemon_species_flavor_text":
+                if any(
+                    x["species_id"] == row_data["species_id"] and
+                    x["version_id"] == row_data["version_id"] and
+                    x["language_id"] == row_data["language_id"]
+                    for x in all_rows_tt
+                ):
+                    continue
+
             # Insert row!
             new_rows.append(row_data)
+            all_rows_tt.append(row_data)
 
             # Remembering some zillion rows in the session consumes a lot of
             # RAM.  Let's not do that.  Commit every 1000 rows
